@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "ethereum-gas-tracker",
-  "title": "Ethereum Gas Tracker",
-  "description": "Track and caculate ethereum gas fee right in your Raycast!",
+  "name": "blockchain-gas-tracker",
+  "title": "Blockchain Gas Tracker",
+  "description": "Track and caculate blockchain gas fees right in your Raycast!",
   "icon": "gas_icon.png",
   "author": "Vonernue",
   "categories": [
@@ -15,7 +15,7 @@
     {
       "name": "currentGas",
       "title": "Show Current Gas",
-      "description": "Show current ethereum gas fee",
+      "description": "Show current blochchain gas fee",
       "mode": "view"
     }
   ],
