@@ -8,11 +8,11 @@ type gasResp = {
 };
 
 export default function Command() {
-  const { isLoading, data, revalidate } = useFetch<gasResp>("https://api.0x3.studio/gas");
+  const { isLoading, data, revalidate } = useFetch<gasResp>("https://api.0x3.studio/gas", { keepPreviousData: false });
   const { low, average, high } = data || {};
 
   return (
-    <List isLoading={isLoading}>
+    <List navigationTitle="Ethereum Mainnet" isLoading={isLoading}>
       <List.Item
         icon={{
           source: Icon.CircleFilled,
@@ -35,7 +35,7 @@ export default function Command() {
         subtitle={average + " Gwei"}
         actions={
           <ActionPanel>
-            <Action title="Reload" onAction={() => revalidate} />
+            <Action title="Reload" onAction={() => revalidate()} />
           </ActionPanel>
         }
       />
@@ -48,7 +48,7 @@ export default function Command() {
         subtitle={high + " Gwei"}
         actions={
           <ActionPanel>
-            <Action title="Reload" onAction={() => revalidate} />
+            <Action title="Reload" onAction={() => revalidate()} />
           </ActionPanel>
         }
       />

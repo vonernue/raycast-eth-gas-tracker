@@ -3,10 +3,11 @@
   "name": "ethereum-gas-tracker",
   "title": "Ethereum Gas Tracker",
   "description": "Track and caculate ethereum gas fee right in your Raycast!",
-  "icon": "command-icon.png",
+  "icon": "gas_icon.png",
   "author": "Vonernue",
   "categories": [
     "Productivity",
+    "Finance",
     "Data"
   ],
   "license": "MIT",
