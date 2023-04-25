@@ -1,8 +1,8 @@
-import { ActionPanel, Detail, List, Action, Icon, Color } from "@raycast/api";
+import { ActionPanel, Detail, List, Action, Icon, Color, getPreferenceValues } from "@raycast/api";
 import { useFetch, MutatePromise } from "@raycast/utils";
 import { useState } from "react";
 
-type gasResp = {
+interface gasResp {
   status: string;
   message: string;
   result: {
@@ -12,10 +12,11 @@ type gasResp = {
     FastGasPrice: string;
     suggestBaseFee: string;
     gasUsedRatio: string;
+    UsdPrice: string;
   };
 };
 
-type priceResp = {
+interface priceResp {
   status: string;
   message: string;
   result: {
@@ -23,10 +24,18 @@ type priceResp = {
   };
 };
 
+interface preference {
+  ethscanKey: string;
+  polygonscanKey: string;
+  bscscanKey: string;
+}
+
 export default function Command() {
+  const preference = getPreferenceValues<preference>()
   const [token, setToken] = useState<string>("eth");
   const [explorerUrl, setExplorerUrl] = useState<string>("https://etherscan.io/");
   const [apiUrl, setApiUrl] = useState<string>("https://api.etherscan.io/");
+  const [apiKey, setApiKey] = useState<string>("NotARealApiToken");
   const [gasLimit, setGasLimit] = useState<number>(21000);
   const [roundFloat, setRoundFloat] = useState<number>();
   const {
@@ -34,10 +43,9 @@ export default function Command() {
     data: gasData,
     revalidate: gasRevalidate,
     mutate,
-  } = useFetch<gasResp>(`${apiUrl}api?module=gastracker&action=gasoracle`, {
+  } = useFetch<gasResp>(`${apiUrl}api?module=gastracker&action=gasoracle&apikey=${apiKey}`, {
     keepPreviousData: true,
     onData: (data) => {
-      console.log(data);
       if (data.status !== "1") {
         gasRevalidate();
       }
@@ -47,36 +55,77 @@ export default function Command() {
     isLoading: priceLoading,
     data: priceData,
     revalidate: priceRevalidate,
-  } = useFetch<priceResp>(`${apiUrl}api?module=stats&action=${token}price`, {
+  } = useFetch<priceResp>(`${apiUrl}api?module=stats&action=${token}price&apikey=${apiKey}`, {
     keepPreviousData: true,
     onData: (data) => {
-      console.log(data);
       if (data.status !== "1") {
         priceRevalidate();
       }
     },
   });
-  var {
-    LastBlock,
-    SafeGasPrice: lowPrice,
-    ProposeGasPrice: avgPrice,
-    FastGasPrice: fastPrice,
-  } = gasData?.result || {};
-  var tokenPrice = priceData?.result[token + "usd"];
+  if (token === "eth" || token === "matic"){
+    var {
+      LastBlock,
+      SafeGasPrice: lowPrice,
+      ProposeGasPrice: avgPrice,
+      FastGasPrice: fastPrice,
+    } = gasData?.result || {};
+    var tokenPrice = priceData?.result[token + "usd"];
+  }else if(token === "bnb"){
+    var {
+      LastBlock,
+      SafeGasPrice: lowPrice,
+      ProposeGasPrice: avgPrice,
+      FastGasPrice: fastPrice,
+      UsdPrice: tokenPrice,
+    } = gasData?.result || {};
+  }
+
 
   function refresh() {
     LastBlock = undefined;
     tokenPrice = undefined;
     gasRevalidate();
     priceRevalidate();
-    if (token === "eth") {
-      setRoundFloat(2);
-    }else if (token === "matic") {
-      setRoundFloat(4);
-    }
+  }
+
+  function dropdownMenu() {
+    return(
+      <List.Dropdown
+        tooltip="Select Network"
+        defaultValue="eth"
+        storeValue={true}
+        onChange={(value) => {
+          if (value === "eth") {
+            setApiUrl("https://api.etherscan.io/");
+            setExplorerUrl("https://etherscan.io/");
+            setToken(value);
+            setApiKey(preference.ethscanKey);
+            setRoundFloat(2);
+          } else if (value === "matic") {
+            setApiUrl("https://api.polygonscan.com/");
+            setExplorerUrl("https://polygonscan.com/");
+            setToken(value);
+            setApiKey(preference.polygonscanKey);
+            setRoundFloat(5);
+          } else if (value === "bnb") {
+            setApiUrl("https://api.bscscan.com/");
+            setExplorerUrl("https://bscscan.com/");
+            setToken(value);
+            setApiKey(preference.bscscanKey);
+            setRoundFloat(5);
+          }
+        }}
+      >
+        <List.Dropdown.Item title="Ethereum" value="eth" />
+        <List.Dropdown.Item title="Polygon" value="matic" />
+        <List.Dropdown.Item title="Binance Smart Chain" value="bnb" />
+      </List.Dropdown>
+    )
   }
 
   function returnList(isLoading: boolean) {
+    console.log(token)
     if (!isLoading) {
       return (
         <List
@@ -86,29 +135,7 @@ export default function Command() {
             setGasLimit(Number(text));
           }}
           searchBarPlaceholder="Enter Gas Limit"
-          searchBarAccessory={
-            <List.Dropdown
-              tooltip="Select Network"
-              defaultValue="eth"
-              storeValue={true}
-              onChange={(value) => {
-                if (value === "eth") {
-                  setApiUrl("https://api.etherscan.io/");
-                  setExplorerUrl("https://etherscan.io/");
-                  setToken(value);
-                  setRoundFloat(2);
-                } else if (value === "matic") {
-                  setApiUrl("https://api.polygonscan.com/");
-                  setExplorerUrl("https://polygonscan.com/");
-                  setToken(value);
-                }
-                refresh();
-              }}
-            >
-              <List.Dropdown.Item title="Ethereum" value="eth" />
-              <List.Dropdown.Item title="Polygon" value="matic" />
-            </List.Dropdown>
-          }
+          searchBarAccessory={dropdownMenu()}
         >
           <List.Item
             icon={{
@@ -116,7 +143,7 @@ export default function Command() {
               tintColor: Color.Orange,
             }}
             title="Current Price (USD)"
-            subtitle={"$" + tokenPrice}
+            accessories={[{ text: `$${tokenPrice}` }]}
             actions={
               <ActionPanel>
                 <Action title="Refresh" onAction={() => refresh()} />
@@ -197,27 +224,7 @@ export default function Command() {
         <List
           navigationTitle="Show Current Gas"
           isLoading={isLoading}
-          searchBarAccessory={
-            <List.Dropdown
-              tooltip="Select Network"
-              defaultValue="eth"
-              storeValue={true}
-              onChange={(value) => {
-                if (value === "eth") {
-                  setApiUrl("https://api.etherscan.io/");
-                  setExplorerUrl("https://etherscan.io/");
-                  setToken(value);
-                } else if (value === "matic") {
-                  setApiUrl("https://api.polygonscan.com/");
-                  setExplorerUrl("https://polygonscan.com/");
-                  setToken(value);
-                }
-              }}
-            >
-              <List.Dropdown.Item title="Ethereum" value="eth" />
-              <List.Dropdown.Item title="Polygon" value="matic" />
-            </List.Dropdown>
-          }
+          searchBarAccessory={dropdownMenu()}
         >
           <List.Item
             icon={{
@@ -225,11 +232,13 @@ export default function Command() {
               tintColor: Color.Blue,
             }}
             title="Loading..."
-            actions={
-              <ActionPanel>
-                <Action title="Refresh" onAction={() => refresh()} />
-              </ActionPanel>
-            }
+          />
+          <List.Item
+          icon={{
+            source: Icon.Info,
+            tintColor: Color.Blue,
+          }}
+          title="Tips: Add api keys in preferences to avoid waiting"
           />
         </List>
       );
