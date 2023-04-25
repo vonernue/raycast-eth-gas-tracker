@@ -27,6 +27,7 @@ export default function Command() {
   const [token, setToken] = useState<string>("eth");
   const [explorerUrl, setExplorerUrl] = useState<string>("https://etherscan.io/");
   const [apiUrl, setApiUrl] = useState<string>("https://api.etherscan.io/");
+  const [gasLimit, setGasLimit] = useState<number>(21000);
   const {
     isLoading: gasLoading,
     data: gasData,
@@ -72,6 +73,10 @@ export default function Command() {
         <List
           navigationTitle="Show Current Gas"
           isLoading={isLoading}
+          onSearchTextChange={(text) => {
+            setGasLimit(Number(text));
+          }}
+          searchBarPlaceholder = "Enter Gas Limit"
           searchBarAccessory={
             <List.Dropdown
               tooltip="Select Network"
@@ -112,14 +117,14 @@ export default function Command() {
               source: Icon.CircleFilled,
               tintColor: Color.Green,
             }}
-            title="Low"
+            title="Slow"
             subtitle={lowPrice + " Gwei"}
             actions={
               <ActionPanel>
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${tokenPrice}` }]}
+            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(lowPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
@@ -133,19 +138,21 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
+            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(avgPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
               source: Icon.CircleFilled,
               tintColor: Color.Red,
             }}
-            title="High"
+            title="Fast"
             subtitle={fastPrice + " Gwei"}
             actions={
               <ActionPanel>
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
+            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(fastPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
