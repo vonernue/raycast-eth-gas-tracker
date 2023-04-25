@@ -1,5 +1,5 @@
-import { ActionPanel, Detail, List, Action, Icon, Color, getPreferenceValues } from "@raycast/api";
-import { useFetch, MutatePromise } from "@raycast/utils";
+import { ActionPanel, List, Action, Icon, Color, getPreferenceValues } from "@raycast/api";
+import { useFetch } from "@raycast/utils";
 import { useState } from "react";
 
 interface gasResp {
@@ -14,7 +14,7 @@ interface gasResp {
     gasUsedRatio: string;
     UsdPrice: string;
   };
-};
+}
 
 interface priceResp {
   status: string;
@@ -22,7 +22,7 @@ interface priceResp {
   result: {
     [key: string]: string;
   };
-};
+}
 
 interface preference {
   ethscanKey: string;
@@ -31,56 +31,53 @@ interface preference {
 }
 
 export default function Command() {
-  const preference = getPreferenceValues<preference>()
+  const preference = getPreferenceValues<preference>();
   const [token, setToken] = useState<string>("eth");
   const [explorerUrl, setExplorerUrl] = useState<string>("https://etherscan.io/");
   const [apiUrl, setApiUrl] = useState<string>("https://api.etherscan.io/");
   const [apiKey, setApiKey] = useState<string>("NotARealApiToken");
   const [gasLimit, setGasLimit] = useState<number>(21000);
   const [roundFloat, setRoundFloat] = useState<number>();
-  const {
-    isLoading: gasLoading,
-    data: gasData,
-    revalidate: gasRevalidate,
-    mutate,
-  } = useFetch<gasResp>(`${apiUrl}api?module=gastracker&action=gasoracle&apikey=${apiKey}`, {
-    keepPreviousData: true,
-    onData: (data) => {
-      if (data.status !== "1") {
-        gasRevalidate();
-      }
-    },
-  });
-  const {
-    isLoading: priceLoading,
-    data: priceData,
-    revalidate: priceRevalidate,
-  } = useFetch<priceResp>(`${apiUrl}api?module=stats&action=${token}price&apikey=${apiKey}`, {
-    keepPreviousData: true,
-    onData: (data) => {
-      if (data.status !== "1") {
-        priceRevalidate();
-      }
-    },
-  });
-  if (token === "eth" || token === "matic"){
-    var {
-      LastBlock,
-      SafeGasPrice: lowPrice,
-      ProposeGasPrice: avgPrice,
-      FastGasPrice: fastPrice,
-    } = gasData?.result || {};
-    var tokenPrice = priceData?.result[token + "usd"];
-  }else if(token === "bnb"){
-    var {
-      LastBlock,
-      SafeGasPrice: lowPrice,
-      ProposeGasPrice: avgPrice,
-      FastGasPrice: fastPrice,
-      UsdPrice: tokenPrice,
-    } = gasData?.result || {};
+  const { data: gasData, revalidate: gasRevalidate } = useFetch<gasResp>(
+    `${apiUrl}api?module=gastracker&action=gasoracle&apikey=${apiKey}`,
+    {
+      keepPreviousData: true,
+      onData: (data) => {
+        if (data.status !== "1") {
+          gasRevalidate();
+        }
+      },
+    }
+  );
+  const { data: priceData, revalidate: priceRevalidate } = useFetch<priceResp>(
+    `${apiUrl}api?module=stats&action=${token}price&apikey=${apiKey}`,
+    {
+      keepPreviousData: true,
+      onData: (data) => {
+        if (data.status !== "1") {
+          priceRevalidate();
+        }
+      },
+    }
+  );
+  let LastBlock: string | undefined;
+  let lowPrice: string | undefined;
+  let avgPrice: string | undefined;
+  let fastPrice: string | undefined;
+  let tokenPrice: string | undefined;
+  if (token === "eth" || token === "matic") {
+    LastBlock = gasData?.result?.LastBlock;
+    lowPrice = gasData?.result?.SafeGasPrice;
+    avgPrice = gasData?.result?.ProposeGasPrice;
+    fastPrice = gasData?.result?.FastGasPrice;
+    tokenPrice = priceData?.result[token + "usd"];
+  } else if (token === "bnb") {
+    LastBlock = gasData?.result?.LastBlock;
+    lowPrice = gasData?.result?.SafeGasPrice;
+    avgPrice = gasData?.result?.ProposeGasPrice;
+    fastPrice = gasData?.result?.FastGasPrice;
+    tokenPrice = gasData?.result?.UsdPrice;
   }
-
 
   function refresh() {
     LastBlock = undefined;
@@ -90,7 +87,7 @@ export default function Command() {
   }
 
   function dropdownMenu() {
-    return(
+    return (
       <List.Dropdown
         tooltip="Select Network"
         defaultValue="eth"
@@ -121,11 +118,11 @@ export default function Command() {
         <List.Dropdown.Item title="Polygon" value="matic" />
         <List.Dropdown.Item title="Binance Smart Chain" value="bnb" />
       </List.Dropdown>
-    )
+    );
   }
 
   function returnList(isLoading: boolean) {
-    console.log(token)
+    console.log(token);
     if (!isLoading) {
       return (
         <List
@@ -162,7 +159,9 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(lowPrice) * gasLimit).toFixed(roundFloat)}` }]}
+            accessories={[
+              { text: `$${((Number(tokenPrice) / 1000000000) * Number(lowPrice) * gasLimit).toFixed(roundFloat)}` },
+            ]}
           />
           <List.Item
             icon={{
@@ -176,7 +175,9 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(avgPrice) * gasLimit).toFixed(roundFloat)}` }]}
+            accessories={[
+              { text: `$${((Number(tokenPrice) / 1000000000) * Number(avgPrice) * gasLimit).toFixed(roundFloat)}` },
+            ]}
           />
           <List.Item
             icon={{
@@ -190,7 +191,9 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(fastPrice) * gasLimit).toFixed(roundFloat)}` }]}
+            accessories={[
+              { text: `$${((Number(tokenPrice) / 1000000000) * Number(fastPrice) * gasLimit).toFixed(roundFloat)}` },
+            ]}
           />
           <List.Item
             icon={{
@@ -221,11 +224,7 @@ export default function Command() {
       );
     } else {
       return (
-        <List
-          navigationTitle="Show Current Gas"
-          isLoading={isLoading}
-          searchBarAccessory={dropdownMenu()}
-        >
+        <List navigationTitle="Show Current Gas" isLoading={isLoading} searchBarAccessory={dropdownMenu()}>
           <List.Item
             icon={{
               source: Icon.Info,
@@ -234,11 +233,11 @@ export default function Command() {
             title="Loading..."
           />
           <List.Item
-          icon={{
-            source: Icon.Info,
-            tintColor: Color.Blue,
-          }}
-          title="Tips: Add api keys in preferences to avoid waiting"
+            icon={{
+              source: Icon.Info,
+              tintColor: Color.Blue,
+            }}
+            title="Tips: Add api keys in preferences to avoid waiting"
           />
         </List>
       );
