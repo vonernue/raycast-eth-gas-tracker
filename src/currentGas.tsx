@@ -76,7 +76,7 @@ export default function Command() {
           onSearchTextChange={(text) => {
             setGasLimit(Number(text));
           }}
-          searchBarPlaceholder = "Enter Gas Limit"
+          searchBarPlaceholder="Enter Gas Limit"
           searchBarAccessory={
             <List.Dropdown
               tooltip="Select Network"
@@ -124,7 +124,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(lowPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(lowPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
@@ -138,7 +138,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(avgPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(avgPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
@@ -152,7 +152,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${Number(tokenPrice) / 1000000000 * Number(fastPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(fastPrice) * gasLimit}` }]}
           />
           <List.Item
             icon={{
