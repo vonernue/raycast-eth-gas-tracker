@@ -28,6 +28,7 @@ export default function Command() {
   const [explorerUrl, setExplorerUrl] = useState<string>("https://etherscan.io/");
   const [apiUrl, setApiUrl] = useState<string>("https://api.etherscan.io/");
   const [gasLimit, setGasLimit] = useState<number>(21000);
+  const [roundFloat, setRoundFloat] = useState<number>(2);
   const {
     isLoading: gasLoading,
     data: gasData,
@@ -55,18 +56,21 @@ export default function Command() {
       }
     },
   });
-  const {
+  var {
     LastBlock,
     SafeGasPrice: lowPrice,
     ProposeGasPrice: avgPrice,
     FastGasPrice: fastPrice,
   } = gasData?.result || {};
-  const tokenPrice = priceData?.result[token + "usd"];
+  var tokenPrice = priceData?.result[token + "usd"];
 
   function refresh() {
+    LastBlock = undefined;
+    tokenPrice = undefined;
     gasRevalidate();
     priceRevalidate();
   }
+
   function returnList(isLoading: boolean) {
     if (!isLoading) {
       return (
@@ -87,11 +91,14 @@ export default function Command() {
                   setApiUrl("https://api.etherscan.io/");
                   setExplorerUrl("https://etherscan.io/");
                   setToken(value);
+                  setRoundFloat(2);
                 } else if (value === "matic") {
                   setApiUrl("https://api.polygonscan.com/");
                   setExplorerUrl("https://polygonscan.com/");
                   setToken(value);
+                  setRoundFloat(5);
                 }
+                refresh();
               }}
             >
               <List.Dropdown.Item title="Ethereum" value="eth" />
@@ -124,7 +131,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(lowPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(lowPrice) * gasLimit).toFixed(roundFloat)}` }]}
           />
           <List.Item
             icon={{
@@ -138,7 +145,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(avgPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(avgPrice) * gasLimit).toFixed(roundFloat)}` }]}
           />
           <List.Item
             icon={{
@@ -152,7 +159,7 @@ export default function Command() {
                 <Action title="Refresh" onAction={() => refresh()} />
               </ActionPanel>
             }
-            accessories={[{ text: `$${(Number(tokenPrice) / 1000000000) * Number(fastPrice) * gasLimit}` }]}
+            accessories={[{ text: `$${((Number(tokenPrice) / 1000000000) * Number(fastPrice) * gasLimit).toFixed(roundFloat)}` }]}
           />
           <List.Item
             icon={{
