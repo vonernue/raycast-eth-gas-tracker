@@ -28,7 +28,7 @@ export default function Command() {
   const [explorerUrl, setExplorerUrl] = useState<string>("https://etherscan.io/");
   const [apiUrl, setApiUrl] = useState<string>("https://api.etherscan.io/");
   const [gasLimit, setGasLimit] = useState<number>(21000);
-  const [roundFloat, setRoundFloat] = useState<number>(2);
+  const [roundFloat, setRoundFloat] = useState<number>();
   const {
     isLoading: gasLoading,
     data: gasData,
@@ -69,6 +69,11 @@ export default function Command() {
     tokenPrice = undefined;
     gasRevalidate();
     priceRevalidate();
+    if (token === "eth") {
+      setRoundFloat(2);
+    }else if (token === "matic") {
+      setRoundFloat(4);
+    }
   }
 
   function returnList(isLoading: boolean) {
@@ -96,7 +101,6 @@ export default function Command() {
                   setApiUrl("https://api.polygonscan.com/");
                   setExplorerUrl("https://polygonscan.com/");
                   setToken(value);
-                  setRoundFloat(5);
                 }
                 refresh();
               }}
@@ -192,7 +196,7 @@ export default function Command() {
       return (
         <List
           navigationTitle="Show Current Gas"
-          isLoading={gasLoading || priceLoading}
+          isLoading={isLoading}
           searchBarAccessory={
             <List.Dropdown
               tooltip="Select Network"
